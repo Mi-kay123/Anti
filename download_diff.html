@@ -1,0 +1,157 @@
+--- download.html (原始)
+
+
++++ download.html (修改后)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Download Anti Life Project</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.container{max-width:600px;width:100%;background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:40px;text-align:center}
+h1{font-size:2.5rem;margin-bottom:10px;background:linear-gradient(135deg,#a855f7,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+p{color:#a0a0a0;margin-bottom:30px;font-size:1.1rem}
+button{width:100%;padding:20px;background:linear-gradient(135deg,#a855f7,#ec4899);border:none;border-radius:12px;color:#fff;font-size:1.3rem;font-weight:700;cursor:pointer;transition:all .3s;box-shadow:0 4px 15px rgba(168,85,247,0.4)}
+button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(168,85,247,0.6)}
+button:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.status{margin-top:20px;color:#a0a0a0;font-size:0.9rem}
+.info{background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);border-radius:12px;padding:20px;margin:20px 0;text-align:left}
+.info h2{font-size:1.1rem;margin-bottom:10px;color:#a855f7}
+.info ol{margin-left:20px;line-height:2;color:#d0d0d0}
+code{background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;font-size:0.85rem}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>📦 Anti Life Project</h1>
+<p>Click below to download all files in one folder</p>
+
+<div class="info">
+<h2>After downloading:</h2>
+<ol>
+<li>Extract the ZIP file</li>
+<li>Open terminal in the folder</li>
+<li>Run <code>npm install</code></li>
+<li>Run <code>npm run dev</code></li>
+<li>Open <code>http://localhost:5173</code></li>
+</ol>
+</div>
+
+<button id="downloadBtn" onclick="downloadProject()">⬇️ Download Complete Project</button>
+<div class="status" id="status">All files will be in one folder</div>
+</div>
+
+<script>
+async function downloadProject() {
+  const btn = document.getElementById('downloadBtn');
+  const status = document.getElementById('status');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Preparing files...';
+  status.textContent = 'Collecting all source files...';
+
+  const zip = new JSZip();
+  const root = zip.folder('anti-life');
+
+  const files = [
+    'index.html',
+    'package.json',
+    'tsconfig.json',
+    'vite.config.js',
+    'src/App.tsx',
+    'src/main.tsx',
+    'src/index.css',
+    'src/components/Onboarding.tsx',
+    'src/components/Dashboard.tsx',
+    'src/components/PsychologySection.tsx',
+    'src/components/LifeSection.tsx',
+    'src/components/SportsSection.tsx',
+    'src/components/EntertainmentSection.tsx',
+    'src/components/TechnologySection.tsx',
+    'src/components/NewsSection.tsx',
+    'src/data/sportsData.ts'
+  ];
+
+  let loaded = 0;
+  const total = files.length;
+
+  for (const file of files) {
+    try {
+      status.textContent = `Loading ${file}... (${loaded + 1}/${total})`;
+      const response = await fetch('/source/' + file);
+      if (response.ok) {
+        const content = await response.text();
+        root.file(file, content);
+      }
+      loaded++;
+    } catch (e) {
+      console.error('Failed to load:', file, e);
+      loaded++;
+    }
+  }
+
+  // Add README
+  const readme = `# Anti Life Web App
+
+> Not anti-life. Pro-understanding life.
+
+## Quick Start
+
+\`\`\`bash
+npm install
+npm run dev
+\`\`\`
+
+Then open http://localhost:5173
+
+## Features
+
+- Mind & Emotions - Psychology, emotion wheel, journaling
+- Life & Relationships - Love language quiz, connection experiments
+- Sports - All 5 major European leagues (96 teams)
+- Entertainment - Movies, music, gaming worldwide
+- Technology - AI, gadgets, space, cybersecurity
+- News - World, politics, science, business, health
+
+## Philosophy
+
+1. Curiosity over Assumptions
+2. Connection over Isolation
+3. Individuality over One-Size-Fits-All
+4. Evidence over Hype
+5. Progress over Perfection
+
+## Tech Stack
+
+React 18, TypeScript, Vite, Tailwind CSS, Framer Motion, Lucide Icons
+`;
+  root.file('README.md', readme);
+
+  status.textContent = 'Creating ZIP file...';
+
+  try {
+    const blob = await zip.generateAsync({
+      type: 'blob',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 9 }
+    });
+
+    saveAs(blob, 'anti-life-project.zip');
+
+    status.textContent = '✅ Download complete! Check your downloads folder.';
+    btn.textContent = '✅ Downloaded! Click to download again';
+    btn.disabled = false;
+  } catch (e) {
+    status.textContent = '❌ Error: ' + e.message;
+    btn.textContent = '⬇️ Retry Download';
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
